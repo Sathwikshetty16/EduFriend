@@ -1,0 +1,153 @@
+.quiz-results-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.results-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.results-header h1 {
+  font-size: 2rem;
+  color: #333;
+}
+
+.score-summary {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.score-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 1rem;
+  border: 5px solid #5cb85c;
+}
+
+.score {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.score-details {
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.detailed-results {
+  margin-top: 2rem;
+}
+
+.detailed-results h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.result-item {
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  border-left: 5px solid;
+}
+
+.result-item.correct {
+  background-color: #dff0d8;
+  border-color: #5cb85c;
+}
+
+.result-item.incorrect {
+  background-color: #f2dede;
+  border-color: #d9534f;
+}
+
+.question-header {
+  margin-bottom: 1rem;
+}
+
+.answers p {
+  margin: 0.5rem 0;
+}
+
+.explanation {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #ccc;
+}
+
+.results-footer {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.back-btn {
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  background-color: #5bc0de;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+  background-color: #46b8da;
+}
+
+.resource-recommendations {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid #eee;
+}
+
+.resource-recommendations h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.resource-section {
+  margin-bottom: 2rem;
+}
+
+.resource-section h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.resource-item {
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border-left: 3px solid #5bc0de;
+}
+
+.resource-item a {
+  font-weight: bold;
+  color: #337ab7;
+  text-decoration: none;
+}
+
+.resource-item a:hover {
+  text-decoration: underline;
+}
+
+.resource-item p {
+  margin-top: 0.5rem;
+  color: #555;
+}

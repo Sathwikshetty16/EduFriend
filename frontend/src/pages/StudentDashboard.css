@@ -1,0 +1,184 @@
+.student-dashboard {
+  display: flex;
+  height: 100vh;
+  background-color: #f7f8fc;
+}
+
+.sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.logo-icon {
+  margin-right: 10px;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-item:hover {
+  background-color: #f0f0f0;
+}
+
+.nav-item.active {
+  background-color: #4a90e2;
+  color: #ffffff;
+}
+
+.nav-icon {
+  margin-right: 15px;
+  font-size: 20px;
+}
+
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.user-name {
+  margin-right: 20px;
+  font-weight: bold;
+}
+
+.logout-btn {
+  padding: 10px 20px;
+  border: none;
+  background-color: #f44336;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.content-area {
+  padding: 20px;
+}
+
+.quiz-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.quizzes-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.quiz-card-student {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.attempt-quiz-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.recommendation-card {
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border-left: 3px solid #5bc0de;
+}
+
+.recommendation-card a {
+  font-weight: bold;
+  color: #337ab7;
+  text-decoration: none;
+}
+
+.recommendation-card a:hover {
+  text-decoration: underline;
+}
+
+.recommendation-text {
+  margin-top: 0.5rem;
+  color: #555;
+}
+
+.weak-areas {
+  margin-top: 2rem;
+}
+
+.weak-areas h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.areas-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.area-card {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.area-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.area-icon {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+}
+
+.area-suggestion {
+  font-size: 0.9rem;
+  color: #555;
+}
