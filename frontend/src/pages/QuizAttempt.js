@@ -96,7 +96,7 @@ const QuizAttempt = () => {
       });
 
       if (response.data.success) {
-        navigate(`/quiz-results/${response.data.attemptId}`);
+        navigate(`/quiz-results/attempt/${response.data.attemptId}`);
       } else {
         setError(response.data.error || 'Failed to submit quiz.');
       }

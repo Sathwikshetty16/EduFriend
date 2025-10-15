@@ -7,6 +7,8 @@ import StudentDashboard from './pages/StudentDashboard';
 import QuizView from './pages/QuizView';
 import QuizAttempt from './pages/QuizAttempt';
 import QuizResults from './pages/QuizResults';
+import SkillGapAnalysis from './pages/SkillGapAnalysis';
+import StudentPerformance from './pages/StudentPerformance';
 import './App.css';
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
           <Route path="/quiz-view/:quizId" element={<QuizView />} />
           <Route path="/quiz-attempt/:quizId" element={<QuizAttempt />} />
           <Route path="/quiz-results/:attemptId" element={<QuizResults />} />
+          <Route path="/quiz-results/:attemptId/analysis" element={<SkillGapAnalysis />} />
+          <Route path="/student-performance/:studentId" element={<StudentPerformance />} />
         </Routes>
       </div>
     </Router>
