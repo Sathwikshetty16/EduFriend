@@ -1,0 +1,26 @@
+# This file specifies files that are *not* uploaded to Google Cloud when
+# deploying your application. For more information, see the documentation for
+# gcloud topic ignore.
+
+# Node.js dependencies
+node_modules/
+
+# Python virtual environment
+venv/
+env/
+
+# Environment variables
+.env
+.env.*
+backend/.env
+
+# Git files
+.git/
+.gitignore
+
+# IDE files
+.vscode/
+.idea/
+
+# Frontend build artifacts
+frontend/build/

@@ -1,0 +1,21 @@
+[debug] [2025-10-15T15:32:16.632Z] ----------------------------------------------------------------------
+[debug] [2025-10-15T15:32:16.636Z] Command:       /usr/local/google/home/sathwikv/.nvm/versions/node/v22.20.0/bin/node /usr/local/google/home/sathwikv/.nvm/versions/node/v22.20.0/bin/firebase projects:addfirebase edufriend
+[debug] [2025-10-15T15:32:16.636Z] CLI Version:   14.19.1
+[debug] [2025-10-15T15:32:16.637Z] Platform:      linux
+[debug] [2025-10-15T15:32:16.637Z] Node Version:  v22.20.0
+[debug] [2025-10-15T15:32:16.638Z] Time:          Wed Oct 15 2025 15:32:16 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-10-15T15:32:16.638Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-10-15T15:32:17.073Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-15T15:32:17.263Z] Running auto auth
+[debug] [2025-10-15T15:32:17.272Z] No OAuth tokens found
+[debug] [2025-10-15T15:32:17.274Z] >>> [apiv2][query] POST https://firebase.googleapis.com/v1beta1/projects/edufriend:addFirebase [none]
+[debug] [2025-10-15T15:32:18.018Z] <<< [apiv2][status] POST https://firebase.googleapis.com/v1beta1/projects/edufriend:addFirebase 403
+[debug] [2025-10-15T15:32:18.019Z] <<< [apiv2][body] POST https://firebase.googleapis.com/v1beta1/projects/edufriend:addFirebase {"error":{"code":403,"message":"Permission denied or not found.","status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.DebugInfo","stackEntries":["com.google.firebase.firedata.shared.modules.ResourceCacheService.mapException(ResourceCacheService.java:72)","com.google.firebase.firedata.shared.modules.ResourceCacheService.lambda$getProjectIdMapping$0(ResourceCacheService.java:47)","com.google.common.util.concurrent.AbstractCatchingFuture$CatchingFuture.doFallback(AbstractCatchingFuture.java:238)","com.google.common.util.concurrent.AbstractCatchingFuture$CatchingFuture.doFallback(AbstractCatchingFuture.java:226)","com.google.common.util.concurrent.AbstractCatchingFuture.run(AbstractCatchingFuture.java:136)","com.google.common.context.ContextRunnable.runInContext(ContextRunnable.java:83)","io.grpc.Context.run(Context.java:536)","com.google.common.context.ContextCallback.runInInheritedContext(ContextCallback.java:56)","com.google.common.context.ContextRunnable.run(ContextRunnable.java:74)","java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)","java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)","com.google.apps.framework.server.AbstractThreadPoolModule$InitializingThreadFactory.lambda$newThread$0(AbstractThreadPoolModule.java:424)","com.google.apps.framework.server.NonBlockingThreadPoolModule$NonBlockingThreadFactory.lambda$newThread$0(NonBlockingThreadPoolModule.java:112)","java.base/java.lang.Thread.run(Unknown Source)"]}]}}
+[debug] [2025-10-15T15:32:18.021Z] Request to https://firebase.googleapis.com/v1beta1/projects/edufriend:addFirebase had HTTP Error: 403, Permission denied or not found.
+[debug] [2025-10-15T15:32:18.023Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/edufriend:addFirebase had HTTP Error: 403, Permission denied or not found.
+    at responseToError (/usr/local/google/home/sathwikv/.nvm/versions/node/v22.20.0/lib/node_modules/firebase-tools/lib/responseToError.js:52:12)
+    at RetryOperation._fn (/usr/local/google/home/sathwikv/.nvm/versions/node/v22.20.0/lib/node_modules/firebase-tools/lib/apiv2.js:312:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[error] 
+[error] Error: Failed to add Firebase to Google Cloud Platform project. See firebase-debug.log for more info.

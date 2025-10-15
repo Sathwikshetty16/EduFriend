@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import './QuizResults.css';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 const QuizResults = () => {
   const { attemptId, studentId } = useParams();
@@ -91,7 +91,7 @@ const QuizResults = () => {
 
   const handleMarkComplete = async (resourceType, resourceIndex) => {
     try {
-      const response = await axios.post(`${API_URL}/quiz-results/attempt/${attemptId}/mark-complete`, {
+      const response = await axios.post(`${API_URL}/quiz-results/${attemptId}/mark-complete`, {
         resourceType,
         resourceIndex
       });
@@ -111,7 +111,7 @@ const QuizResults = () => {
 
   const handleMarkAnalysisComplete = async () => {
     try {
-      const response = await axios.post(`${API_URL}/quiz-results/attempt/${attemptId}/mark-complete`, {
+      const response = await axios.post(`${API_URL}/quiz-results/${attemptId}/mark-complete`, {
         resourceType: 'analysisViewed',
         resourceIndex: 0
       });

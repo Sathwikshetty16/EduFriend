@@ -22,7 +22,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+# In production, the frontend will be hosted on Firebase.
+CORS(app, resources={r"/api/*": {"origins": [
+    "http://localhost:3000",
+    "https://edufriend-web-app.web.app",
+    "https://astana-apprentices-playground.web.app",
+    "https://astana-apprentices-playground.firebaseapp.com"
+]}})
 
 # Initialize Firebase Admin
 try:
@@ -1893,5 +1899,5 @@ if __name__ == '__main__':
     if not youtube_service:
         print("⚠️  WARNING: YOUTUBE_API_KEY not found!")
     print("="*80)
-    
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    port = int(os.environ.get("PORT", 8080))
+    app.run(debug=True, port=port, host='0.0.0.0')

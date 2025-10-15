@@ -5,7 +5,7 @@ import { auth } from '../firebase';  // Adjust path if needed
 import axios from 'axios';
 import './SignUp.css';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
