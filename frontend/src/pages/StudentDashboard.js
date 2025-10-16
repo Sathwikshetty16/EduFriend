@@ -3,6 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './StudentDashboard.css';
+import QuizResultsView from '../components/QuizResultsView';
+import logoImg from './logo.png';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
 
@@ -15,6 +17,8 @@ const StudentDashboard = () => {
   const [skillGapData, setSkillGapData] = useState(null);
   const [performanceStats, setPerformanceStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedAttemptId, setSelectedAttemptId] = useState(null);
+  const [selectedAttemptDetails, setSelectedAttemptDetails] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,12 +27,24 @@ const StudentDashboard = () => {
     try {
       const response = await axios.get(`${API_URL}/student/${user.uid}/quiz-attempts`);
       if (response.data.success) {
-        setAttemptedQuizzes(response.data.attempts || []);
+        // Sort attempts by completion time ascending (first attempt first)
+        const getTs = (a) =>
+          (a.completedAt?._seconds) ||
+          (a.completedAt ? new Date(a.completedAt).getTime() / 1000 : 0) ||
+          (a.timestamp?._seconds) ||
+          (a.timestamp ? new Date(a.timestamp).getTime() / 1000 : 0);
+        const attempts = (response.data.attempts || []).sort((a, b) => getTs(a) - getTs(b));
+        setAttemptedQuizzes(attempts);
+        // Set the first attempt as default if none selected
+        if (attempts.length > 0 && !selectedAttemptId) {
+          setSelectedAttemptId(String(attempts[0].id));
+          setSelectedAttemptDetails(attempts[0]);
+        }
       }
     } catch (error) {
       console.error('Error fetching attempted quizzes:', error);
     }
-  }, [user]);
+  }, [user, selectedAttemptId]);
 
   useEffect(() => {
     if (location.state?.quizCompleted) {
@@ -36,6 +52,24 @@ const StudentDashboard = () => {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location, fetchAttemptedQuizzes, navigate]);
+
+  // Ensure Growth Analytics defaults to first attempt when the tab is opened
+  useEffect(() => {
+    if (activeTab === 'growth' && attemptedQuizzes.length > 0) {
+      const getTs = (a) =>
+        (a.completedAt?._seconds) ||
+        (a.completedAt ? new Date(a.completedAt).getTime() / 1000 : 0) ||
+        (a.timestamp?._seconds) ||
+        (a.timestamp ? new Date(a.timestamp).getTime() / 1000 : 0);
+      const sorted = [...attemptedQuizzes].sort((a, b) => getTs(a) - getTs(b));
+      // Only set default if nothing selected or selected attempt no longer exists
+      const hasSelected = selectedAttemptId && attemptedQuizzes.some(a => String(a.id) === String(selectedAttemptId));
+      if (!hasSelected) {
+        setSelectedAttemptId(String(sorted[0].id));
+        setSelectedAttemptDetails(sorted[0]);
+      }
+    }
+  }, [activeTab, attemptedQuizzes, selectedAttemptId]);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -68,7 +102,6 @@ const StudentDashboard = () => {
       console.error('Error fetching quizzes:', error);
     }
   };
-
 
   const fetchMaterials = async () => {
     try {
@@ -145,10 +178,11 @@ const StudentDashboard = () => {
     return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'short', 
-      day: 'numeric' 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
-
 
   const fetchSkillGapAnalysis = async () => {
     if (!user) return;
@@ -177,18 +211,24 @@ const StudentDashboard = () => {
     }
   };
 
+  // Handle attempt selection change
+  const handleAttemptChange = (e) => {
+    const attemptId = e.target.value; // always a string from <select>
+    setSelectedAttemptId(attemptId);
+    const attempt = attemptedQuizzes.find(a => String(a.id) === attemptId);
+    setSelectedAttemptDetails(attempt || null);
+  };
+
   // Calculate performance trend
   const calculatePerformanceTrend = () => {
     if (attemptedQuizzes.length < 2) return null;
 
-    // Sort by date
     const sorted = [...attemptedQuizzes].sort((a, b) => {
       const dateA = a.completedAt?._seconds || new Date(a.completedAt).getTime() / 1000;
       const dateB = b.completedAt?._seconds || new Date(b.completedAt).getTime() / 1000;
       return dateA - dateB;
     });
 
-    // Get last 10 attempts for trend
     const recentAttempts = sorted.slice(-10);
     
     return recentAttempts.map((attempt, index) => ({
@@ -199,7 +239,6 @@ const StudentDashboard = () => {
     }));
   };
 
-  // Calculate skill gap completion
   const calculateSkillGapCompletion = () => {
     if (!skillGapData || !attemptedQuizzes.length) return null;
 
@@ -213,6 +252,304 @@ const StudentDashboard = () => {
       percentage: totalTopics > 0 ? ((masteredTopics / totalTopics) * 100).toFixed(1) : 0,
       weakAreas: skillGapData.topicErrorAnalysis?.slice(0, 5) || []
     };
+  };
+
+  // ============ Render Growth Analytics Section ============
+  const renderGrowthAnalytics = () => {
+    if (attemptedQuizzes.length === 0) {
+      return (
+        <div className="content-section">
+          <div className="page-header">
+            <div>
+              <h1 className="page-title">Growth Analytics</h1>
+              <p className="page-subtitle">Track your learning journey and compare quiz attempts.</p>
+            </div>
+          </div>
+          <div className="empty-state">
+            <div className="empty-icon">📊</div>
+            <h3>No Quiz Attempts Yet</h3>
+            <p>Complete some quizzes to see your growth analytics!</p>
+          </div>
+        </div>
+      );
+    }
+
+    const groupedAttempts = attemptedQuizzes.reduce((acc, attempt) => {
+      const quizId = attempt.quizId;
+      if (!acc[quizId]) {
+        acc[quizId] = [];
+      }
+      acc[quizId].push(attempt);
+      return acc;
+    }, {});
+
+    // Sort attempts by date for each quiz
+    Object.keys(groupedAttempts).forEach(quizId => {
+      groupedAttempts[quizId].sort((a, b) => {
+        const dateA = a.completedAt?._seconds || new Date(a.completedAt).getTime() / 1000;
+        const dateB = b.completedAt?._seconds || new Date(b.completedAt).getTime() / 1000;
+        return dateA - dateB;
+      });
+    });
+
+    return (
+      <div className="content-section">
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Growth Analytics</h1>
+            <p className="page-subtitle">Compare your quiz attempts and track improvement over time.</p>
+          </div>
+        </div>
+
+        <div className="growth-analytics-container">
+          {/* Quiz Attempt Selector */}
+          <div className="attempt-selector-card">
+            <label htmlFor="attempt-select" className="selector-label">
+              <span className="selector-icon">🎯</span>
+              Select Quiz Attempt to Analyze:
+            </label>
+            <select
+              id="attempt-select"
+              className="attempt-dropdown"
+              value={selectedAttemptId ? String(selectedAttemptId) : ''}
+              onChange={handleAttemptChange}
+            >
+              {attemptedQuizzes.map((attempt, index) => (
+                <option key={attempt.id} value={String(attempt.id)}>
+                  {attempt.quizTitle} - Attempt {attemptedQuizzes.filter(a => a.quizId === attempt.quizId).indexOf(attempt) + 1} ({formatDate(attempt.completedAt)}) - {attempt.percentage.toFixed(1)}%
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Embedded Quiz Results for selected attempt */}
+          {selectedAttemptId && (
+            <div className="selected-attempt-details">
+              <QuizResultsView key={selectedAttemptId} attemptId={selectedAttemptId} />
+            </div>
+          )}
+
+          {/* Selected Attempt Details */}
+          {selectedAttemptDetails && (
+            <div className="selected-attempt-details">
+              {/* Attempt Overview Card */}
+              <div className="attempt-overview-card">
+                <div className="overview-header">
+                  <h2 className="overview-title">{selectedAttemptDetails.quizTitle}</h2>
+                  <span 
+                    className="score-badge-large"
+                    style={{ backgroundColor: getScoreColor(selectedAttemptDetails.percentage) }}
+                  >
+                    {selectedAttemptDetails.percentage.toFixed(1)}%
+                  </span>
+                </div>
+                
+                <div className="overview-stats-grid">
+                  <div className="overview-stat">
+                    <span className="stat-icon-large">📝</span>
+                    <div className="stat-info">
+                      <span className="stat-value-large">{selectedAttemptDetails.score}/{selectedAttemptDetails.totalQuestions}</span>
+                      <span className="stat-label-large">Questions Correct</span>
+                    </div>
+                  </div>
+
+                  <div className="overview-stat">
+                    <span className="stat-icon-large">📅</span>
+                    <div className="stat-info">
+                      <span className="stat-value-large">{formatDate(selectedAttemptDetails.completedAt)}</span>
+                      <span className="stat-label-large">Completed On</span>
+                    </div>
+                  </div>
+
+                  <div className="overview-stat">
+                    <span className="stat-icon-large">⏱️</span>
+                    <div className="stat-info">
+                      <span className="stat-value-large">
+                        {selectedAttemptDetails.timeTaken 
+                          ? `${Math.floor(selectedAttemptDetails.timeTaken / 60)}m ${selectedAttemptDetails.timeTaken % 60}s`
+                          : 'N/A'
+                        }
+                      </span>
+                      <span className="stat-label-large">Time Taken</span>
+                    </div>
+                  </div>
+
+                  <div className="overview-stat">
+                    <span className="stat-icon-large">
+                      {selectedAttemptDetails.percentage >= 80 ? '🏆' : 
+                       selectedAttemptDetails.percentage >= 60 ? '👍' : '💪'}
+                    </span>
+                    <div className="stat-info">
+                      <span className="stat-value-large">
+                        {selectedAttemptDetails.percentage >= 80 ? 'Excellent' : 
+                         selectedAttemptDetails.percentage >= 60 ? 'Good' : 'Keep Trying'}
+                      </span>
+                      <span className="stat-label-large">Performance</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  className="view-detailed-results-btn"
+                  onClick={() => handleViewResults(selectedAttemptDetails.id)}
+                >
+                  <span>📊</span>
+                  View Detailed Results
+                </button>
+              </div>
+
+              {/* Growth Comparison Section */}
+              {(() => {
+                const quizAttempts = groupedAttempts[selectedAttemptDetails.quizId] || [];
+                const currentAttemptIndex = quizAttempts.findIndex(a => a.id === selectedAttemptDetails.id);
+                
+                if (quizAttempts.length > 1) {
+                  const firstAttempt = quizAttempts[0];
+                  const improvement = selectedAttemptDetails.percentage - firstAttempt.percentage;
+                  const bestAttempt = quizAttempts.reduce((best, current) => 
+                    current.percentage > best.percentage ? current : best
+                  );
+
+                  return (
+                    <div className="growth-comparison-section">
+                      <h3 className="section-title-growth">📈 Growth Insights for This Quiz</h3>
+                      
+                      <div className="comparison-cards-grid">
+                        <div className="comparison-card">
+                          <div className="comparison-header">
+                            <span className="comparison-icon">🎯</span>
+                            <h4>First Attempt</h4>
+                          </div>
+                          <div className="comparison-score">{firstAttempt.percentage.toFixed(1)}%</div>
+                          <p className="comparison-date">{formatDate(firstAttempt.completedAt)}</p>
+                        </div>
+
+                        <div className="comparison-arrow">
+                          {improvement > 0 ? '📈' : improvement < 0 ? '📉' : '➡️'}
+                        </div>
+
+                        <div className="comparison-card current">
+                          <div className="comparison-header">
+                            <span className="comparison-icon">⭐</span>
+                            <h4>Current Attempt</h4>
+                          </div>
+                          <div className="comparison-score">{selectedAttemptDetails.percentage.toFixed(1)}%</div>
+                          <p className="comparison-date">{formatDate(selectedAttemptDetails.completedAt)}</p>
+                        </div>
+
+                        <div className="comparison-arrow">
+                          {selectedAttemptDetails.id === bestAttempt.id ? '✅' : '🎯'}
+                        </div>
+
+                        <div className="comparison-card best">
+                          <div className="comparison-header">
+                            <span className="comparison-icon">🏆</span>
+                            <h4>Best Attempt</h4>
+                          </div>
+                          <div className="comparison-score">{bestAttempt.percentage.toFixed(1)}%</div>
+                          <p className="comparison-date">{formatDate(bestAttempt.completedAt)}</p>
+                        </div>
+                      </div>
+
+                      <div className="improvement-summary">
+                        <div className="improvement-stat">
+                          <span className="improvement-label">Total Improvement:</span>
+                          <span 
+                            className="improvement-value"
+                            style={{ color: improvement >= 0 ? '#34A853' : '#EA4335' }}
+                          >
+                            {improvement > 0 ? '+' : ''}{improvement.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="improvement-stat">
+                          <span className="improvement-label">Total Attempts:</span>
+                          <span className="improvement-value">{quizAttempts.length}</span>
+                        </div>
+                        <div className="improvement-stat">
+                          <span className="improvement-label">This is Attempt:</span>
+                          <span className="improvement-value">#{currentAttemptIndex + 1}</span>
+                        </div>
+                      </div>
+
+                      {/* Progress Chart for this specific quiz */}
+                      {quizAttempts.length > 1 && (
+                        <div className="quiz-progress-chart">
+                          <h4 className="chart-subtitle-small">Progress Over Attempts</h4>
+                          <div className="mini-line-chart">
+                            <svg viewBox="0 0 400 150" preserveAspectRatio="none">
+                              {/* Grid lines */}
+                              <line x1="0" y1="0" x2="400" y2="0" stroke="#e8eaed" strokeWidth="1" />
+                              <line x1="0" y1="75" x2="400" y2="75" stroke="#e8eaed" strokeWidth="1" />
+                              <line x1="0" y1="150" x2="400" y2="150" stroke="#e8eaed" strokeWidth="1" />
+
+                              {/* Data line */}
+                              <polyline
+                                points={quizAttempts.map((attempt, i) => {
+                                  const x = (i / (quizAttempts.length - 1)) * 400;
+                                  const y = 150 - (attempt.percentage * 1.5);
+                                  return `${x},${y}`;
+                                }).join(' ')}
+                                fill="none"
+                                stroke="#4A90E2"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                              />
+
+                              {/* Data points */}
+                              {quizAttempts.map((attempt, i) => {
+                                const x = (i / (quizAttempts.length - 1)) * 400;
+                                const y = 150 - (attempt.percentage * 1.5);
+                                const isCurrent = attempt.id === selectedAttemptDetails.id;
+                                return (
+                                  <circle
+                                    key={i}
+                                    cx={x}
+                                    cy={y}
+                                    r={isCurrent ? "6" : "4"}
+                                    fill={isCurrent ? "#EA4335" : "#4A90E2"}
+                                    stroke="white"
+                                    strokeWidth="2"
+                                  />
+                                );
+                              })}
+                            </svg>
+                            <div className="mini-chart-labels">
+                              {quizAttempts.map((_, i) => (
+                                <span key={i}>#{i + 1}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Action Buttons */}
+              <div className="growth-actions">
+                <button
+                  className="action-btn primary"
+                  onClick={() => handleAttemptQuiz(selectedAttemptDetails.quizId)}
+                >
+                  <span>🔄</span>
+                  Retake This Quiz
+                </button>
+                <button
+                  className="action-btn secondary"
+                  onClick={() => setActiveTab('quiz')}
+                >
+                  <span>🎯</span>
+                                    <span>🎯</span>
+                  Browse All Quizzes
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   // ============ Render Performance Trend Chart ============
@@ -231,7 +568,6 @@ const StudentDashboard = () => {
     const minScore = Math.min(...trendData.map(d => d.score));
     const avgScore = (trendData.reduce((sum, d) => sum + d.score, 0) / trendData.length).toFixed(1);
 
-    // Calculate if improving or declining
     const firstHalf = trendData.slice(0, Math.floor(trendData.length / 2));
     const secondHalf = trendData.slice(Math.floor(trendData.length / 2));
     const firstAvg = firstHalf.reduce((sum, d) => sum + d.score, 0) / firstHalf.length;
@@ -278,14 +614,12 @@ const StudentDashboard = () => {
           </div>
           <div className="chart-area">
             <svg className="line-chart" viewBox="0 0 600 300" preserveAspectRatio="none">
-              {/* Grid lines */}
               <line x1="0" y1="0" x2="600" y2="0" stroke="#e8eaed" strokeWidth="1" />
               <line x1="0" y1="75" x2="600" y2="75" stroke="#e8eaed" strokeWidth="1" />
               <line x1="0" y1="150" x2="600" y2="150" stroke="#e8eaed" strokeWidth="1" />
               <line x1="0" y1="225" x2="600" y2="225" stroke="#e8eaed" strokeWidth="1" />
               <line x1="0" y1="300" x2="600" y2="300" stroke="#e8eaed" strokeWidth="1" />
 
-              {/* Average line */}
               <line 
                 x1="0" 
                 y1={300 - (avgScore * 3)} 
@@ -297,7 +631,6 @@ const StudentDashboard = () => {
                 opacity="0.5"
               />
 
-              {/* Data line */}
               <polyline
                 points={trendData.map((d, i) => {
                   const x = (i / (trendData.length - 1)) * 600;
@@ -311,7 +644,6 @@ const StudentDashboard = () => {
                 strokeLinejoin="round"
               />
 
-              {/* Data points */}
               {trendData.map((d, i) => {
                 const x = (i / (trendData.length - 1)) * 600;
                 const y = 300 - (d.score * 3);
@@ -481,7 +813,6 @@ const StudentDashboard = () => {
           </div>
         ) : (
           <div className="performance-container-new">
-            {/* Performance Stats Cards */}
             <div className="performance-stats-grid">
               <div className="stat-card-new">
                 <div className="stat-icon-new">📋</div>
@@ -520,20 +851,16 @@ const StudentDashboard = () => {
               </div>
             </div>
 
-            {/* Performance Charts Section */}
             <div className="charts-grid">
-              {/* Performance Trend Chart */}
               <div className="chart-card">
                 {renderPerformanceTrendChart()}
               </div>
 
-              {/* Skill Gap Completion */}
               <div className="chart-card">
                 {renderSkillGapCompletion()}
               </div>
             </div>
 
-            {/* Recent Quiz Attempts */}
             <div className="recent-attempts-section">
               <h3 className="section-title-new">Recent Quiz Attempts</h3>
               <div className="attempts-list-new">
@@ -549,13 +876,6 @@ const StudentDashboard = () => {
                       </div>
                       <span className="score-details">{attempt.score}/{attempt.totalQuestions} Correct</span>
                     </div>
-                    <button
-                      className="view-details-btn-compact"
-                      onClick={() => handleViewResults(attempt.id)}
-                      title="View Details"
-                    >
-                      →
-                    </button>
                   </div>
                 ))}
               </div>
@@ -711,7 +1031,6 @@ const StudentDashboard = () => {
     </div>
   );
 
-
   const renderContent = () => {
     switch (activeTab) {
       case 'materials':
@@ -720,6 +1039,8 @@ const StudentDashboard = () => {
         return renderQuizSection();
       case 'performance':
         return renderPerformanceSection();
+      case 'growth':
+        return renderGrowthAnalytics();
       default:
         return renderStudyMaterials();
     }
@@ -729,8 +1050,10 @@ const StudentDashboard = () => {
     <div className="student-dashboard">
       <aside className="sidebar">
         <div className="logo">
-          <span className="logo-icon">✨</span>
-          <span className="logo-text">EduMasterAI</span>
+          <span className="logo-icon"> 
+            <img src={logoImg} alt="BridgeAi logo" style={{ width: '45px', height: '45px', objectFit: 'contain', borderRadius: '4px' }} />
+          </span>
+          <span className="logo-text">BridgeAI</span>
         </div>
         <nav className="nav-menu">
           <div
@@ -754,6 +1077,13 @@ const StudentDashboard = () => {
             <span className="nav-icon">📈</span>
             <span>Performance</span>
           </div>
+          <div
+            className={`nav-item ${activeTab === 'growth' ? 'active' : ''}`}
+            onClick={() => setActiveTab('growth')}
+          >
+            <span className="nav-icon">📊</span>
+            <span>Growth Analytics</span>
+          </div>
         </nav>
       </aside>
       
@@ -762,17 +1092,18 @@ const StudentDashboard = () => {
           <h1>
             {activeTab === 'materials' ? 'Study Materials' :
              activeTab === 'quiz' ? 'Quizzes' :
-             'Performance'}
+             activeTab === 'performance' ? 'Performance' :
+             'Growth Analytics'}
           </h1>
           <div className="header-actions">
             <span className="user-name">Welcome, {user?.fullName || 'Student'}</span>
             <button className="logout-btn" onClick={handleLogout}>
-              � Logout
+              🚪 Logout
             </button>
           </div>
         </header>
         <div className="content-area">
-          {renderContent()}
+                    {renderContent()}
         </div>
       </div>
     </div>

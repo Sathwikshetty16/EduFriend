@@ -470,7 +470,10 @@ const StudentPerformance = () => {
   return (
     <div className="student-dashboard">
       <div className="main-content">
-        <header className="dashboard-header">
+        <header className="dashboard-header performance-header">
+          <button onClick={() => navigate(-1)} className="back-button">
+            &larr; Back
+          </button>
           <h1>
             Performance Insights
           </h1>

@@ -130,6 +130,31 @@ body {
   color: var(--text-primary);
 }
 
+.back-button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: #f1f3f4;
+  color: var(--text-primary);
+}
+
+.performance-header {
+    justify-content: flex-start;
+    gap: 16px;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -1904,6 +1929,526 @@ button,
   stroke-width: 3;
   cursor: pointer;
 }
+/* ============ Growth Analytics Styles ============ */
 
+.growth-analytics-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.attempt-selector-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.selector-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #202124;
+  margin-bottom: 12px;
+}
+
+.selector-icon {
+  font-size: 24px;
+}
+
+.attempt-dropdown {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 15px;
+  border: 2px solid #e8eaed;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #202124;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.attempt-dropdown:hover {
+  border-color: #4A90E2;
+  background-color: #f8f9fa;
+}
+
+.attempt-dropdown:focus {
+  outline: none;
+  border-color: #4A90E2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.selected-attempt-details {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Attempt Overview Card */
+.attempt-overview-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 32px;
+  color: white;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.overview-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+}
+
+.score-badge-large {
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.overview-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.overview-stat {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
+}
+
+.overview-stat:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-icon-large {
+  font-size: 36px;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-value-large {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.stat-label-large {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.view-detailed-results-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  background: white;
+  color: #667eea;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.view-detailed-results-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.view-detailed-results-btn span {
+  font-size: 20px;
+}
+
+/* Growth Comparison Section */
+.growth-comparison-section {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.section-title-growth {
+  font-size: 22px;
+  font-weight: 700;
+  color: #202124;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.comparison-cards-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.comparison-card {
+  flex: 1;
+  min-width: 150px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+
+.comparison-card:hover {
+  transform: translateY(-4px);
+}
+
+.comparison-card.current {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+  box-shadow: 0 6px 20px rgba(253, 203, 110, 0.4);
+}
+
+.comparison-card.best {
+  background: linear-gradient(135deg, #a8e6cf 0%, #3ecc77 100%);
+  box-shadow: 0 6px 20px rgba(62, 204, 119, 0.4);
+}
+
+.comparison-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.comparison-icon {
+  font-size: 32px;
+}
+
+.comparison-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #202124;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.comparison-score {
+  font-size: 36px;
+  font-weight: 700;
+  color: #202124;
+  margin-bottom: 8px;
+}
+
+.comparison-date {
+  font-size: 12px;
+  color: #5f6368;
+  margin: 0;
+}
+
+.comparison-arrow {
+  font-size: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.improvement-summary {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.improvement-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.improvement-label {
+  font-size: 13px;
+  color: #5f6368;
+  font-weight: 500;
+}
+
+.improvement-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #202124;
+}
+
+/* Quiz Progress Chart */
+.quiz-progress-chart {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.chart-subtitle-small {
+  font-size: 16px;
+  font-weight: 600;
+  color: #202124;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.mini-line-chart {
+  position: relative;
+}
+
+.mini-line-chart svg {
+  width: 100%;
+  height: 150px;
+  display: block;
+}
+
+.mini-chart-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 12px;
+  color: #5f6368;
+  font-weight: 500;
+}
+
+.mini-chart-labels span {
+  flex: 1;
+  text-align: center;
+}
+
+/* Growth Actions */
+.growth-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.action-btn.secondary {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.action-btn.secondary:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn span {
+  font-size: 20px;
+}
+
+/* Responsive Design for Growth Analytics */
+@media (max-width: 1024px) {
+  .comparison-cards-grid {
+    flex-direction: column;
+  }
+
+  .comparison-arrow {
+    transform: rotate(90deg);
+  }
+
+  .overview-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .growth-analytics-container {
+    padding: 12px;
+  }
+
+  .attempt-overview-card {
+    padding: 20px;
+  }
+
+  .overview-title {
+    font-size: 22px;
+  }
+
+  .score-badge-large {
+    font-size: 20px;
+    padding: 10px 20px;
+  }
+
+  .overview-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-score {
+    font-size: 28px;
+  }
+
+  .improvement-value {
+    font-size: 24px;
+  }
+
+  .growth-actions {
+    flex-direction: column;
+  }
+
+  .action-btn {
+    width: 100%;
+  }
+
+  .comparison-cards-grid {
+    gap: 12px;
+  }
+
+  .comparison-arrow {
+    font-size: 36px;
+    margin: 8px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .attempt-overview-card {
+    padding: 16px;
+  }
+
+  .overview-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .overview-title {
+    font-size: 18px;
+  }
+
+  .score-badge-large {
+    font-size: 18px;
+    padding: 8px 16px;
+  }
+
+  .section-title-growth {
+    font-size: 18px;
+  }
+
+  .stat-value-large {
+    font-size: 18px;
+  }
+
+  .stat-label-large {
+    font-size: 12px;
+  }
+
+  .comparison-score {
+    font-size: 24px;
+  }
+
+  .stat-icon-large {
+    font-size: 28px;
+  }
+
+  .comparison-icon {
+    font-size: 28px;
+  }
+}
+
+/* Loading and Empty States for Growth Analytics */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4A90E2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 /* End of Chart Styles */
 /* End of StudentDashboard.css */

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Dashboard.css';
+import logoImg from './logo.png';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
 
@@ -411,7 +412,7 @@ const fetchClassInsights = async () => {
                       onClick={() => handleDownloadMaterial(material.id)}
                       title="Download"
                     >
-                      📥
+                      ⬇️
                     </button>
                     <button 
                       className="action-btn delete-btn"
@@ -1007,8 +1008,10 @@ const renderPerformanceInsights = () => {
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="logo">
-          <span className="logo-icon">✨</span>
-          <span className="logo-text">EduMasterAI</span>
+          <span className="logo-icon">
+            <img src={logoImg} alt="BridgeAi logo" style={{ width: '45px', height: '45px', objectFit: 'contain', borderRadius: '4px' }} />
+          </span>
+          <span className="logo-text">BridgeAI</span>
         </div>
 
         <nav className="nav-menu">

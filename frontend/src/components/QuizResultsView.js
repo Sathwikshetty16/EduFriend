@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
-import './QuizResults.css';
+import '../pages/QuizResults.css';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
 
-const QuizResults = () => {
-  const { attemptId, studentId } = useParams();
-  const navigate = useNavigate();
+const QuizResultsView = ({ attemptId, showBackButton = false, onBack }) => {
   const [attempt, setAttempt] = useState(null);
-  const [attempts, setAttempts] = useState([]);
-  const [student, setStudent] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,25 +17,8 @@ const QuizResults = () => {
     analysisViewed: false
   });
 
-  const fetchStudentResults = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${API_URL}/student/${studentId}/quiz-attempts`);
-      if (response.data.success) {
-        setAttempts(response.data.attempts);
-        setStudent(response.data.student);
-      } else {
-        setError('Failed to load student quiz results.');
-      }
-    } catch (err) {
-      setError('An error occurred while fetching student results.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [studentId]);
-
   const fetchAttempt = useCallback(async () => {
+    if (!attemptId) return;
     setLoading(true);
     try {
       const [resultsRes, analysisRes, progressRes] = await Promise.all([
@@ -56,6 +35,8 @@ const QuizResults = () => {
 
       if (analysisRes.data.success) {
         setAnalysis(analysisRes.data.analysis);
+      } else {
+        setAnalysis(null);
       }
 
       if (progressRes.data.success && progressRes.data.progress) {
@@ -64,8 +45,9 @@ const QuizResults = () => {
           youtubeVideos: progressRes.data.progress.youtubeVideos || [],
           analysisViewed: progressRes.data.progress.analysisViewed || false
         });
+      } else {
+        setCompletedResources({ onlineResources: [], youtubeVideos: [], analysisViewed: false });
       }
-
     } catch (err) {
       setError('An error occurred while fetching the results.');
       console.error(err);
@@ -75,19 +57,15 @@ const QuizResults = () => {
   }, [attemptId]);
 
   useEffect(() => {
-    if (studentId) {
-      fetchStudentResults();
-    } else if (attemptId) {
-      fetchAttempt();
-    }
-  }, [studentId, attemptId, fetchStudentResults, fetchAttempt]);
-
-  useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
       setUser(JSON.parse(userData));
     }
   }, []);
+
+  useEffect(() => {
+    fetchAttempt();
+  }, [fetchAttempt]);
 
   const handleMarkComplete = async (resourceType, resourceIndex) => {
     try {
@@ -147,6 +125,10 @@ const QuizResults = () => {
     return Math.round((completedCount / totalResources) * 100);
   };
 
+  if (!attemptId) {
+    return <div className="quiz-results-container">No attempt selected.</div>;
+  }
+
   if (loading) {
     return <div className="loading-container">Loading Results...</div>;
   }
@@ -155,40 +137,8 @@ const QuizResults = () => {
     return <div className="error-container">{error}</div>;
   }
 
-  if (studentId) {
-    if (!student) {
-      return <div className="container">Student not found.</div>;
-    }
-    return (
-      <div className="quiz-results-container">
-        <div className="results-header">
-          <h1>Quiz Results for {student.fullName}</h1>
-        </div>
-        <div className="attempts-list">
-          {attempts.map((att) => (
-            <div key={att.id} className="attempt-item" onClick={() => navigate(`/quiz-results/${att.id}`)}>
-              <div className="attempt-info">
-                <h3>{att.quizTitle}</h3>
-                <p>Score: {att.percentage}%</p>
-                <p>Date: {att.timestamp ? new Date(att.timestamp._seconds * 1000).toLocaleDateString() : 'N/A'}</p>
-              </div>
-              <div className="attempt-score">
-                <span>{att.percentage}%</span>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="results-footer">
-          <button onClick={() => navigate('/dashboard')} className="back-btn">
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   if (!attempt) {
-    return <div className="container">Results not found.</div>;
+    return <div className="quiz-results-container">Results not found.</div>;
   }
 
   const {
@@ -206,14 +156,6 @@ const QuizResults = () => {
     (resourceRecommendations.youtubeVideos && resourceRecommendations.youtubeVideos.length > 0) ||
     analysis
   );
-
-  const handleBackToDashboard = () => {
-    if (user?.userType === 'student') {
-      navigate('/student-dashboard', { state: { quizCompleted: true } });
-    } else {
-      navigate('/dashboard');
-    }
-  };
 
   return (
     <div className="quiz-results-container">
@@ -352,16 +294,18 @@ const QuizResults = () => {
         </div>
       )}
 
-      <div className="results-footer">
-        <button 
-          onClick={handleBackToDashboard} 
-          className="back-btn"
-        >
-          Back to Dashboard
-        </button>
-      </div>
+      {showBackButton && (
+        <div className="results-footer">
+          <button 
+            onClick={onBack}
+            className="back-btn"
+          >
+            Back
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default QuizResults;
+export default QuizResultsView;

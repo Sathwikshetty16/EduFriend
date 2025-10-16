@@ -1570,6 +1570,7 @@ def get_overall_progress(student_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============ Teacher Analytics Routes ============
+# In your app.py file
 
 @app.route('/api/teacher/<teacher_id>/students-overview', methods=['GET'])
 def get_students_overview(teacher_id):
@@ -1581,7 +1582,8 @@ def get_students_overview(teacher_id):
         
         teacher_quiz_ids = []
         for quiz_id, quiz_data in all_quizzes.items():
-            if quiz_data.get('teacherId') == teacher_id:
+            # FIX 1: Add a check to ensure quiz_data is a dictionary
+            if isinstance(quiz_data, dict) and quiz_data.get('teacherId') == teacher_id:
                 teacher_quiz_ids.append(quiz_id)
         
         if not teacher_quiz_ids:
@@ -1602,7 +1604,8 @@ def get_students_overview(teacher_id):
         # Organize attempts by student
         student_attempts = defaultdict(list)
         for attempt_id, attempt_data in all_attempts.items():
-            if attempt_data.get('quizId') in teacher_quiz_ids:
+            # FIX 2: Add a check to ensure attempt_data is a dictionary before processing
+            if isinstance(attempt_data, dict) and attempt_data.get('quizId') in teacher_quiz_ids:
                 student_id = attempt_data.get('studentId')
                 attempt_data['id'] = attempt_id
                 student_attempts[student_id].append(attempt_data)
@@ -1616,16 +1619,21 @@ def get_students_overview(teacher_id):
             if not student_data:
                 continue
             
+            # Filter out any non-dictionary items from attempts to be safe
+            valid_attempts = [a for a in attempts if isinstance(a, dict)]
+            if not valid_attempts:
+                continue
+
             # Calculate average score
-            total_score = sum(a.get('score', 0) for a in attempts)
-            total_questions = sum(a.get('totalQuestions', 0) for a in attempts)
+            total_score = sum(a.get('score', 0) for a in valid_attempts)
+            total_questions = sum(a.get('totalQuestions', 0) for a in valid_attempts)
             average_score = (total_score / total_questions * 100) if total_questions > 0 else 0
             
             # Calculate skill gap completion
             total_resources = 0
             completed_resources = 0
             
-            for attempt in attempts:
+            for attempt in valid_attempts:
                 attempt_id = attempt['id']
                 resource_recommendations = attempt.get('resourceRecommendations', {})
                 
@@ -1638,11 +1646,10 @@ def get_students_overview(teacher_id):
                 if attempt_total > 0:
                     total_resources += attempt_total
                     
-                    # Get progress data
                     progress_ref = db.reference(f'resource_progress/{attempt_id}')
                     progress_data = progress_ref.get()
                     
-                    if progress_data:
+                    if isinstance(progress_data, dict): # Check if progress data exists and is valid
                         completed_resources += (
                             len(progress_data.get('onlineResources', [])) +
                             len(progress_data.get('youtubeVideos', [])) +
@@ -1651,17 +1658,21 @@ def get_students_overview(teacher_id):
             
             skill_gap_completion = (completed_resources / total_resources * 100) if total_resources > 0 else 0
             
+            # FIX 3: Correctly find the last activity by sorting attempts by date
+            sorted_attempts = sorted(valid_attempts, key=lambda x: x.get('completedAt', ''))
+            last_activity = sorted_attempts[-1].get('completedAt', '') if sorted_attempts else ''
+
             student_overview = {
                 'studentId': student_id,
                 'studentName': student_data.get('fullName', 'Unknown'),
                 'studentEmail': student_data.get('email', 'N/A'),
                 'currentGrade': student_data.get('currentGrade', 'N/A'),
-                'quizzesTaken': len(attempts),
+                'quizzesTaken': len(valid_attempts),
                 'averageScore': round(average_score, 2),
                 'skillGapCompletion': round(skill_gap_completion, 2),
                 'totalResources': total_resources,
                 'completedResources': completed_resources,
-                'lastActivity': attempts[-1].get('completedAt', '') if attempts else ''
+                'lastActivity': last_activity # Use the correctly sorted last activity
             }
             
             students_overview.append(student_overview)
@@ -1752,7 +1763,6 @@ def home():
         }
     }), 200
 # Add to app.py
-
 @app.route('/api/teacher/<teacher_id>/class-insights', methods=['GET'])
 def get_class_insights(teacher_id):
     """Get AI-powered insights for the entire class"""
@@ -1760,93 +1770,151 @@ def get_class_insights(teacher_id):
         # Get all quizzes by this teacher
         quizzes_ref = db.reference('quizzes')
         teacher_quizzes = quizzes_ref.get() or {}
-        teacher_quiz_ids = [quiz_id for quiz_id, quiz in teacher_quizzes.items() if quiz.get('teacherId') == teacher_id]
+        
+        # FIX 1: Ensure we only process quizzes that are valid dictionaries
+        teacher_quiz_ids = [
+            quiz_id for quiz_id, quiz in teacher_quizzes.items() 
+            if isinstance(quiz, dict) and quiz.get('teacherId') == teacher_id
+        ]
         
         # Get all attempts for these quizzes
         attempts_ref = db.reference('quiz_attempts')
         all_attempts = attempts_ref.get() or {}
-        class_attempts = [attempt for attempt in all_attempts.values() if attempt.get('quizId') in teacher_quiz_ids]
-        
-        # Get all students in the class
-        students_ref = db.reference('students')
-        all_students = students_ref.get() or {}
+
+        # FIX 2: Ensure we only process attempts that are valid dictionaries
+        class_attempts = [
+            attempt for attempt in all_attempts.values() 
+            if isinstance(attempt, dict) and attempt.get('quizId') in teacher_quiz_ids
+        ]
         
         # If no attempts, return empty
         if not class_attempts:
             return jsonify({
                 'success': True,
-                'insights': "No quiz data available to generate class insights."
+                'insights': "No quiz data available to generate class insights.",
+                'chartData': None
             }), 200
         
         # Gather data for the AI
-        total_quizzes = len(class_attempts)
+        total_quizzes_taken = len(class_attempts)
         total_students = len(set(attempt.get('studentId') for attempt in class_attempts))
-        average_score = sum(attempt.get('percentage', 0) for attempt in class_attempts) / total_quizzes
+        average_score = sum(attempt.get('percentage', 0) for attempt in class_attempts) / total_quizzes_taken
         average_score = round(average_score, 2)
         
-        # Identify common weak topics across the class
+        # === Prepare Chart Data ===
+        
+        # 1. Score Distribution
+        score_ranges = {'0-20': 0, '21-40': 0, '41-60': 0, '61-80': 0, '81-100': 0}
+        for attempt in class_attempts:
+            score = attempt.get('percentage', 0)
+            if score <= 20: score_ranges['0-20'] += 1
+            elif score <= 40: score_ranges['21-40'] += 1
+            elif score <= 60: score_ranges['41-60'] += 1
+            elif score <= 80: score_ranges['61-80'] += 1
+            else: score_ranges['81-100'] += 1
+        
+        distribution_data = [{'range': k, 'students': v} for k, v in score_ranges.items()]
+        
+        # 2. Topic Performance (Weak Topics)
         weak_topics = defaultdict(int)
         for attempt in class_attempts:
             for topic in attempt.get('weakTopics', []):
                 weak_topics[topic] += 1
         
-        # Sort and get top 5
-        common_weak_topics = sorted(weak_topics.items(), key=lambda x: x[1], reverse=True)[:5]
-        common_weak_topics = [topic[0] for topic in common_weak_topics]
+        topic_performance = []
+        for topic, weakness_count in sorted(weak_topics.items(), key=lambda x: x[1], reverse=True)[:5]:
+            score = max(0, 100 - (weakness_count / total_quizzes_taken * 100))
+            topic_performance.append({
+                'topic': topic,
+                'score': round(score, 1),
+                'weaknessCount': weakness_count
+            })
         
-        # Prepare the context for the AI
+        common_weak_topics = [topic['topic'] for topic in topic_performance]
+        
+        # 3. Performance Trends (Group by date)
+        attempts_by_date = defaultdict(list)
+        for attempt in class_attempts:
+            # FIX 3: Safely get the timestamp and parse it
+            completed_at_str = attempt.get('completedAt')
+            if completed_at_str:
+                try:
+                    # Assuming ISO format like '2025-10-16T10:05:30.123Z'
+                    date_obj = datetime.fromisoformat(completed_at_str.replace('Z', '+00:00'))
+                    date_str = date_obj.strftime('%Y-%m-%d')
+                    attempts_by_date[date_str].append(attempt.get('percentage', 0))
+                except (ValueError, TypeError):
+                    # Skip if the date format is wrong
+                    continue
+        
+        trend_data = []
+        for date in sorted(attempts_by_date.keys())[-10:]:
+            scores = attempts_by_date[date]
+            avg_score = sum(scores) / len(scores) if scores else 0
+            trend_data.append({
+                'date': datetime.strptime(date, '%Y-%m-%d').strftime('%b %d'),
+                'avgScore': round(avg_score, 1),
+                'attempts': len(scores)
+            })
+        
+        # 4. Completion Statistics
+        completion_stats = {
+            'totalQuizzes': len(teacher_quiz_ids),
+            'totalAttempts': total_quizzes_taken,
+            'activeStudents': total_students,
+            'classAverage': round(average_score, 1)
+        }
+        
+        chart_data = {
+            'trends': trend_data,
+            'distribution': distribution_data,
+            'topicPerformance': topic_performance,
+            'completionStats': completion_stats
+        }
+        
         context = f"""
-        Teacher Class Performance Analysis Report
-        
-        Class Statistics:
-        - Total Students: {total_students}
-        - Total Quizzes Taken: {total_quizzes}
+        Teacher Class Performance Analysis Report:
+        - Total Students with attempts: {total_students}
+        - Total Quizzes Taken by class: {total_quizzes_taken}
         - Class Average Score: {average_score}%
         - Most Common Weak Topics: {', '.join(common_weak_topics)}
         """
         
-        # Generate the prompt for the AI
         prompt = f"""
-        You are an experienced education analyst with 15 years of experience. 
-        Review the following class performance data and provide professional insights:
-        
+        You are an experienced education analyst. Based on the following data, provide a concise and actionable analysis for a teacher. Use markdown for formatting.
+
         {context}
-        
-        Please provide a comprehensive analysis with the following structure:
-        
-        # Class Performance Overview
-        [Summary of overall class performance]
-        
-        # Key Strengths Observed
-        [Bulleted list of 3-5 class strengths]
-        
-        # Common Learning Gaps
-        [Bulleted list of 3-5 most common gaps across the class]
-        
-        # Recommendations for Class Instruction
-        [Bulleted list of 5-7 specific teaching strategies to address gaps]
-        
-        # Top 3 Focus Areas
-        [Prioritized areas for immediate attention]
-        
-        Format the response using Markdown. Be specific and actionable.
+
+        Structure your response as follows:
+        ### Overall Performance Summary
+        A brief overview of the class's performance.
+
+        ### Key Strengths
+        - List 2-3 positive observations.
+
+        ### Areas for Improvement
+        - List the top 2-3 learning gaps based on the weak topics.
+
+        ### Actionable Recommendations
+        - Provide 3-4 specific, practical recommendations for the teacher.
         """
         
-        # Use Gemini to generate the insights
         response = gemini_model.generate_content(prompt)
         insights = response.text
         
-        # Return the insights
         return jsonify({
             'success': True,
-            'insights': insights
+            'insights': insights,
+            'chartData': chart_data
         }), 200
         
     except Exception as e:
+        print(f"❌ Get class insights error:\n{traceback.format_exc()}")
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+        
 # ============ Error Handlers ============
 
 
